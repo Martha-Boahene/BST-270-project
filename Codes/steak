@@ -1,0 +1,128 @@
+---
+title: 'BST 270: Individual project'
+author: "Martha Boahene"
+format: html
+code-fold: TRUE
+highlight-style: gruvbox
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Highlight of project and reproducible results
+
+
+In this project, the objective was to reproduce specific figures and tables from the FiveThirtyEight website. The chosen focus was on reproducing content from the article titled "How Americans Like Their Steak" on the FiveThirtyEight website [https://fivethirtyeight.com/features/how-americans-like-their-steak/]. The project successfully accomplished the goal of reproducing both a table and a figure from the original content. The forthcoming details will provide a comprehensive explanation of the construction process for the table and the generation of the figure, highlighting the accuracy and fidelity in replicating the intended output.
+
+
+
+
+
+## Packages
+
+The project initiation involves loading essential packages to facilitate various tasks. These include:
+
+* readr: This package is utilized for proficiently loading and reading data, ensuring the successful importation of the required dataset.
+
+* kableExtra: This package plays a crucial role in constructing and formatting tables, providing enhanced capabilities for table customization.
+
+* ggplot2: Utilized for creating plots, ggplot2 is an influential package that contributes to the visualization aspect of the project.
+
+* dplyr: This package is essential for data manipulation and transformation, providing functionalities to streamline data processing tasks.
+
+By incorporating these packages into the project, it sets the foundation for effective data handling, table construction, and plot generation throughout the subsequent phases.
+```{r}
+# libraries loaded
+library(readr)
+library(kableExtra)
+library(dplyr)
+library(ggplot2)
+```
+
+## Data Loading
+
+Next, the dataset, available on the provided GitHub repository link https://github.com/fivethirtyeight/data/blob/master/steak-survey/steak-risk-survey.csv, is essential for the project. The codes below involve specifying the URL of the dataset and utilizing the read_csv function from the readr package to read the data into the R environment. The skip = 1 parameter is used to skip the first row during the import process.The following codes can be used to successfully read the data into R:
+
+```{r}
+# Specify the URL of the dataset on GitHub
+data_url <- "https://raw.githubusercontent.com/fivethirtyeight/data/master/steak-survey/steak-risk-survey.csv"
+
+# Read the data into R using readr
+steak_risk_survey <- readr::read_csv(data_url, skip = 1)
+
+```
+
+## Reproduce Table
+
+My first goal is to reproduce the table summarizing people's risk and how they liked their steak cooked. In the survey, people were asked “Consider the following hypothetical situations: In Lottery A, you have a 50 percent chance of success, with a payout of $\$100$. In Lottery B, you have a 90 percent chance of success, with a payout of $\$20$. Assuming you have $\$10$ to bet, would you play Lottery A or Lottery B?” The survey revealed that respondents perceived "Lottery A" as the riskier lottery based on their responses. This distinction is explicitly captured in the dataset through the data column labeled "Response_2," which serves as a record of responses from individuals who made choices between Lottery A and Lottery B. Additionally, the survey documented participants' steak preferences, encompassing five distinct categories: Well, Medium-well, Medium, Medium-rare, and Rare. These steak preferences were recorded in the data column labeled "Response_10," providing insights into the varied ways individuals prefer their steak to be cooked. 
+
+```{r}
+
+  
+ steak_Response2_Response_10 =c(steak_risk_survey$Response...2,steak_risk_survey $Response...10)
+
+ 
+ percentage_table<- table(steak_risk_survey$Response...2,steak_risk_survey $Response...10)
+
+ #calculate proportion 
+ percentages<- prop.table(percentage_table,margin=1)*100
+ 
+ #transpose table and round percentages to one decimal place
+  percentages<-t(round(percentages,1))
+  
+# rename rows and columns
+  colnames(percentages)<-c("RESPONDENTS WHO CHOSE THE RISKIER LOTTERY","RESPONDENTS WHO CHOSE THE SAFER LOTTERY")
+  
+  rownames(percentages)<-c("Medium","Medium-rare","Medium-well","Rare","Well")
+ 
+  
+# Shuffle the rows
+percentages_shuffled <- percentages[c("Well","Medium-well","Medium","Medium-rare","Rare"), ]
+
+# Display the modified and shuffled percentage table
+kable(percentages_shuffled, "html") %>%
+  kable_styling(full_width = F) %>%
+  add_header_above(c("STEAK PREFERENCE", " " = 1, " "), bold = TRUE, line = "solid")
+```
+
+
+# Reproduce figure 
+Afterwards, I created a horizontal bar plot to show how people preferred their steak. The results matched what the original author found, with around 69% of participants liking their steak cooked to a medium level. Interestingly, the plot revealed that there were about twice as many people who preferred medium-rare compared to those who liked it medium-well. This similarity in results indicates that my results accurately reflects the original findings.
+
+
+
+```{r}
+# Calculate total number of respondents
+total <- sum(table(steak_risk_survey$Response...10))
+
+# Counts for each steak preference
+counts <- table(steak_risk_survey$Response...10)
+
+# Steak Preferences
+steak_Preference <- c("Medium", "Medium-rare", "Medium-Well", "Rare", "Well")
+
+# Calculate percentages of steak preferences
+percentages <- round(counts / total * 100)
+
+# Create a data frame with steak preferences and percentages
+data_preference <- data.frame(steak_Preference, percentages)
+
+# Create a horizontal bar plot without axis or coordinate labels
+ggp <- ggplot(data_preference, aes(x = percentages, y = steak_Preference, fill = steak_Preference)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("#8B4513", "#A0522D", "#CD853F", "#D2B48C", "#DEB887")) +  
+  theme_minimal() + 
+  theme(axis.title = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        axis.line = element_blank(),
+        legend.position = "none") +  # Remove unnecessary elements
+  geom_text(aes(label = paste0(percentages, "%")), hjust = -0.2) +  # Print percentages on bars 
+  labs(title = "How Do You Like Your Steak Prepared?")  # Flip coordinates
+
+print(ggp)
+
+
+```
